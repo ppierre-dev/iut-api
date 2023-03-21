@@ -1,11 +1,11 @@
 // (Étape 1) Import de express
-var express = require('express');
+const express = require('express');
 
 // (Étape 1) Définition du router
-var router = express.Router();
+const router = express.Router();
 
 // Import du Contrôleur student
-var student_controller = require("../controllers/student");
+const student_controller = require("../controllers/student");
 
 // (Étape 2) Ajout de la route qui permet d'ajouter un étudiant
 router.post("/", student_controller.create);
