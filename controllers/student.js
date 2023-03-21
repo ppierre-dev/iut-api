@@ -1,3 +1,7 @@
+// Import du modèle student
+const Student = require("../models/student");
+
+// Import de express-validator
 const { param, body, validationResult } = require("express-validator");
 
 // Déterminer les règles de validation de la requête
@@ -23,9 +27,7 @@ const studentValidationRules = () => {
             .trim()
             .isLength({ min: 1 })
             .escape()
-            .withMessage("Class must be specified.")
-            .isAlphanumeric()
-            .withMessage("Class must has non-alphanumeric characters."),
+            .withMessage("Class must be specified."),
 
         body("email").isEmail().withMessage("Invalid email"),
 
@@ -76,24 +78,78 @@ const checkValidity = (req, res, next) => {
 
 // Create
 exports.create = [bodyIdValidationRule(), studentValidationRules(), checkValidity, (req, res, next) => {
-    return res.status(201).json("CREATE !");
+    
+    // Création de la nouvelle instance de student à ajouter 
+    const student = new Student({
+        _id: req.body.id,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        class: req.body.class,
+        email: req.body.email,
+        dateOfBirth: req.body.dateOfBirth,
+      });
+
+    // Ajout de student dans la bdd
+    student.save((err) => {
+        if (err) {
+            return res.status(500).json(err);
+        }
+        return res.status(201).json("Student created successfully !");
+    });
 }];
 
 // Read
 exports.getAll = (req, res, next) => {
-    return res.status(200).json("GET ALL!");
+    Student.find(function (err, result) {
+      if (err) {
+        return res.status(500).json(err);
+      }
+      return res.status(200).json(result);
+    });
 };
 
 exports.getById = [paramIdValidationRule(), checkValidity, (req, res, next) => {
-    return res.status(200).json("GET BY ID !");
+    Student.findById(req.params.id).exec(function (err, result) {
+        if (err) {
+          return res.status(500).json(err);
+        }
+        return res.status(200).json(result);
+    });
 }];
 
 // Update
 exports.update = [paramIdValidationRule(), studentValidationRules(), checkValidity,(req, res, next) => {
-    return res.status(200).json("UPDATE !");
+    
+    // Création de la nouvelle instance de student à modifier 
+    const student = new Student({
+        _id: req.params.id,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        class: req.body.class,
+        email: req.body.email,
+        dateOfBirth: req.body.dateOfBirth,
+      });
+
+      Student.findByIdAndUpdate(req.params.id, student, function (err, result) {
+        if (err) {
+          return res.status(500).json(err);
+        }
+        if(!result){
+            res.status(404).json("Student with id "+req.params.id+" is not found !");
+        }
+        return res.status(201).json("Student updated successfully !");
+      });
 }];
 
 // Delete
-exports.delete = [paramIdValidationRule(), studentValidationRules(), checkValidity,(req, res, next) => {
-    return res.status(200).json("DELETE !");
+exports.delete = [paramIdValidationRule(), checkValidity,(req, res, next) => {
+    Student.findByIdAndRemove(req.params.id).exec(function (err, result) {
+        if (err) {
+          return res.status(500).json(err);
+        }
+        if(!result){
+            res.status(404).json("Student with id "+req.params.id+" is not found !");
+        }
+        return res.status(200).json("Student deleted successfully !");
+      });
 }];
